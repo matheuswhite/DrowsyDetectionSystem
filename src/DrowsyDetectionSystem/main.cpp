@@ -1,6 +1,8 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/objdetect.hpp>
+#include <opencv2/imgproc.hpp>
 
 using namespace std;
 using namespace cv;
@@ -17,8 +19,7 @@ uchar min3(uchar b, uchar g, uchar r) {
     return ret <= r ? ret : r;
 }
 
-int main(int argc, char *argv[])
-{
+int oldCode(void) {
     namedWindow("img", WINDOW_KEEPRATIO);
     namedWindow("BGR", WINDOW_KEEPRATIO);
     namedWindow("YCrCb", WINDOW_KEEPRATIO);
@@ -61,7 +62,7 @@ int main(int argc, char *argv[])
         img6 = Mat::zeros(img.rows, img.cols, CV_8UC1);
         img7 = Mat::zeros(img.rows, img.cols, CV_8UC1);
 
-        img8 = Mat::zeros(img.rows, img.cols, CV_8UC1);
+        img8 = Mat::zeros(img.rows, img.cols, CV_32FC1);
 
         double sum1 = 0, sum2 = 0;
         for (int i = 0; i < img.rows; ++i) {
@@ -99,8 +100,8 @@ int main(int argc, char *argv[])
                 img5.at<uchar>(i, j) = (img2.at<uchar>(i, j) && img3.at<uchar>(i, j) && img4.at<uchar>(i, j)) * 255;
                 //Mouth Map
                 img6.at<uchar>(i, j) = ((ycrcb[1].at<uchar>(i, j)*ycrcb[1].at<uchar>(i, j))/65025.0)*255;
-                img7.at<uchar>(i, j) = ((float)ycrcb[1].at<uchar>(i, j)/ycrcb[2].at<uchar>(i, j))*255;
-                img8.at<uchar>(i, j) = (img6.at<uchar>(i, j) && (img6.at<uchar>(i, j) - img7.at<uchar>(i, j)))*255;
+                img7.at<uchar>(i, j) = ((float)ycrcb[1].at<uchar>(i, j)/ycrcb[2].at<uchar>(i, j)/3)*255;
+                img8.at<float>(i, j) = ( img6.at<uchar>(i, j) * (img6.at<uchar>(i, j) - img7.at<uchar>(i, j)) * (img6.at<uchar>(i, j) - img7.at<uchar>(i, j)) );
             }
         }
 
@@ -110,8 +111,6 @@ int main(int argc, char *argv[])
         kernel1 = getStructuringElement(MORPH_ELLIPSE, Size( threshold2+1, threshold2+1));
         morphologyEx(img5, img5, MORPH_CLOSE, kernel1);
         //*/
-
-
 
         imshow("img", img);
         imshow("BGR", img2);
@@ -126,4 +125,45 @@ int main(int argc, char *argv[])
     }
 
     return 0;
+}
+
+int main(int argc, char *argv[])
+{
+    namedWindow("img", WINDOW_KEEPRATIO);
+
+    VideoCapture vid;
+    vid.open(0);
+    if (!vid.isOpened()) return 1;
+
+    Mat img;
+    vector<Rect_<int> > faces;
+    CascadeClassifier face_cascade;
+    face_cascade.load("haarcascade_frontalface_alt.xml");
+
+    CascadeClassifier mouth_cascade;
+    mouth_cascade.load("haarcascade_mcs_mouth.xml");
+    vector<Rect_<int> > mouth;
+
+    //img = imread("yawning2.png", IMREAD_COLOR);
+    for (;;) {
+        vid >> img;
+
+        /**********************FACE******************************/
+        //face_cascade.detectMultiScale(img, faces, 1.15, 3, 0|CASCADE_SCALE_IMAGE, Size(30, 30));
+        face_cascade.detectMultiScale(img, faces, 1.05, 8, 0|CASCADE_SCALE_IMAGE, Size(55, 55));
+        Rect face = faces[0];
+        rectangle(img, Point(face.x, face.y), Point(face.x+face.width, face.y+face.height), Scalar(255, 0, 0), 3, 4);
+
+        /*********************MOUTH*******************************/
+        Mat ROI = img(Rect(face.x, face.y+face.height/2, face.width, face.height/2));
+        rectangle(img, Point(face.x, face.y+face.height/2), Point(face.x+face.width, face.y+face.height), Scalar(0, 255, 0), 2, 4);
+        mouth_cascade.detectMultiScale(ROI, mouth, 1.20, 5, 0|CASCADE_SCALE_IMAGE, Size(30, 30));
+
+        Rect m = mouth[0];
+        rectangle(img, Point(face.x+m.x, (face.height/2)+face.y+m.y), Point(face.x+m.x+m.width, (face.height/2)+face.y+m.y+m.height), Scalar(0, 0, 255), 2, 4);
+
+        imshow("img", img);
+    //for(;;) {
+        if (waitKey(5) == 'q') break;
+    }
 }
