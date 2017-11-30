@@ -3,6 +3,8 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/objdetect.hpp>
 #include <opencv2/imgproc.hpp>
+#include <time.h>
+#include <string>
 
 using namespace std;
 using namespace cv;
@@ -130,12 +132,22 @@ int oldCode(void) {
 int main(int argc, char *argv[])
 {
     namedWindow("img", WINDOW_KEEPRATIO);
+    namedWindow("img2", WINDOW_KEEPRATIO);
 
     VideoCapture vid;
-    vid.open(0);
+    vid.open("1-FemaleNoGlasses.avi");
+//    vid.open(0);
     if (!vid.isOpened()) return 1;
 
-    Mat img;
+    Mat img, img2, ROI;
+    int count = 0;
+    int yawningCounter = 0;
+    double secondCounter = 0;
+    time_t start, end;
+    int offset = 50;
+    int threshold1 = 100, threshold2 = 35;
+    string yawningPerSecond = "0";
+
     vector<Rect_<int> > faces;
     CascadeClassifier face_cascade;
     face_cascade.load("haarcascade_frontalface_alt.xml");
@@ -144,26 +156,74 @@ int main(int argc, char *argv[])
     mouth_cascade.load("haarcascade_mcs_mouth.xml");
     vector<Rect_<int> > mouth;
 
+    createTrackbar("Threshold1", "img", &threshold1, 255, 0, 0);
+    createTrackbar("Threshold2", "img", &threshold2, 255, 0, 0);
+
     //img = imread("yawning2.png", IMREAD_COLOR);
     for (;;) {
+        time(&start);
+
         vid >> img;
+        img2 = img.clone();
+
+//        int FPS = vid.get(CV_CAP_PROP_FPS);
+//        cout << "FPS: " << FPS << endl;
+
+        resize(img, img, Size(640, 360));
 
         /**********************FACE******************************/
         //face_cascade.detectMultiScale(img, faces, 1.15, 3, 0|CASCADE_SCALE_IMAGE, Size(30, 30));
         face_cascade.detectMultiScale(img, faces, 1.05, 8, 0|CASCADE_SCALE_IMAGE, Size(55, 55));
-        Rect face = faces[0];
-        rectangle(img, Point(face.x, face.y), Point(face.x+face.width, face.y+face.height), Scalar(255, 0, 0), 3, 4);
+        for (int i = 0; i < faces.size(); ++i) {
+            Rect face = faces[i];
+            rectangle(img, Point(face.x, face.y), Point(face.x+face.width, offset+face.y+face.height), Scalar(255, 0, 0), 3, 4);
 
-        /*********************MOUTH*******************************/
-        Mat ROI = img(Rect(face.x, face.y+face.height/2, face.width, face.height/2));
-        rectangle(img, Point(face.x, face.y+face.height/2), Point(face.x+face.width, face.y+face.height), Scalar(0, 255, 0), 2, 4);
-        mouth_cascade.detectMultiScale(ROI, mouth, 1.20, 5, 0|CASCADE_SCALE_IMAGE, Size(30, 30));
+            /*********************MOUTH*******************************/
+            ROI = img(Rect(face.x, face.y+face.height/2, face.width, offset+face.height/2));
+            //rectangle(img, Point(face.x, face.y+face.height/2), Point(face.x+face.width, face.y+face.height), Scalar(0, 255, 0), 2, 4);
+            mouth_cascade.detectMultiScale(ROI, mouth, 1.20, 5, 0|CASCADE_SCALE_IMAGE, Size(30, 30));
 
-        Rect m = mouth[0];
-        rectangle(img, Point(face.x+m.x, (face.height/2)+face.y+m.y), Point(face.x+m.x+m.width, (face.height/2)+face.y+m.y+m.height), Scalar(0, 0, 255), 2, 4);
+            for (int j = 0; j < mouth.size(); ++j) {
+                Rect m = mouth[j];
+                rectangle(img, Point(face.x+m.x, (face.height/2)+face.y+m.y), Point(face.x+m.x+m.width, (face.height/2)+face.y+m.y+m.height), Scalar(0, 0, 255), 2, 4);
+            }
+
+            /*********************YAWN*******************************/
+            cvtColor(ROI, img2, CV_BGR2GRAY);
+            medianBlur(img2, img2, 5);
+            vector<Vec3f> circles;
+            HoughCircles(img2, circles, CV_HOUGH_GRADIENT, 1, img2.rows/4, threshold1, threshold2, 20, 40);
+            for (int i = 0; i < circles.size(); ++i) {
+                Point center(cvRound(circles[i][0])+face.x, (face.height/2)+face.y+cvRound(circles[i][1]));
+                circle(img, center, cvRound(circles[i][2]), Scalar(0, 255, 0), 3, 8, 0);
+                //if (i == 0)
+                count++;
+            }
+
+            if (count > 0) {
+                putText(img, "YAWNING", Point(50, 50), FONT_HERSHEY_PLAIN, 2, Scalar(0, 255, 255), 3, 8);
+                yawningCounter++;
+                count = 0;
+            }
+        }
+
+
+
+        putText(img, yawningPerSecond, Point(600, 50), FONT_HERSHEY_PLAIN, 2, Scalar(0, 255, 255), 2, 8);
 
         imshow("img", img);
-    //for(;;) {
-        if (waitKey(5) == 'q') break;
+        imshow("img2", img2);
+
+        if (waitKey(1) == 'q') break;
+
+        time(&end);
+
+        secondCounter += difftime(end, start);
+
+        if (secondCounter >= 1) {
+            secondCounter = 0;
+            yawningPerSecond =  to_string(yawningCounter);
+            yawningCounter = 0;
+        }
     }
 }
