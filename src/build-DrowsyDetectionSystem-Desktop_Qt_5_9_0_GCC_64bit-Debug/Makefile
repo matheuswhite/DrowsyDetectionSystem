@@ -51,8 +51,16 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = ../DrowsyDetectionSystem/main.cpp 
-OBJECTS       = main.o
+SOURCES       = ../DrowsyDetectionSystem/main.cpp \
+		../DrowsyDetectionSystem/facedetector.cpp \
+		../DrowsyDetectionSystem/mouthdetector.cpp \
+		../DrowsyDetectionSystem/yawningdetector.cpp \
+		../DrowsyDetectionSystem/videoplayer.cpp 
+OBJECTS       = main.o \
+		facedetector.o \
+		mouthdetector.o \
+		yawningdetector.o \
+		videoplayer.o
 DIST          = /opt/Qt5.9.0/5.9/gcc_64/mkspecs/features/spec_pre.prf \
 		/opt/Qt5.9.0/5.9/gcc_64/mkspecs/common/unix.conf \
 		/opt/Qt5.9.0/5.9/gcc_64/mkspecs/common/linux.conf \
@@ -233,7 +241,15 @@ DIST          = /opt/Qt5.9.0/5.9/gcc_64/mkspecs/features/spec_pre.prf \
 		/opt/Qt5.9.0/5.9/gcc_64/mkspecs/features/exceptions.prf \
 		/opt/Qt5.9.0/5.9/gcc_64/mkspecs/features/yacc.prf \
 		/opt/Qt5.9.0/5.9/gcc_64/mkspecs/features/lex.prf \
-		../DrowsyDetectionSystem/DrowsyDetectionSystem.pro  ../DrowsyDetectionSystem/main.cpp
+		../DrowsyDetectionSystem/DrowsyDetectionSystem.pro ../DrowsyDetectionSystem/facedetector.h \
+		../DrowsyDetectionSystem/common.h \
+		../DrowsyDetectionSystem/mouthdetector.h \
+		../DrowsyDetectionSystem/yawningdetector.h \
+		../DrowsyDetectionSystem/videoplayer.h ../DrowsyDetectionSystem/main.cpp \
+		../DrowsyDetectionSystem/facedetector.cpp \
+		../DrowsyDetectionSystem/mouthdetector.cpp \
+		../DrowsyDetectionSystem/yawningdetector.cpp \
+		../DrowsyDetectionSystem/videoplayer.cpp
 QMAKE_TARGET  = DrowsyDetectionSystem
 DESTDIR       = 
 TARGET        = DrowsyDetectionSystem
@@ -629,7 +645,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /opt/Qt5.9.0/5.9/gcc_64/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../DrowsyDetectionSystem/main.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../DrowsyDetectionSystem/facedetector.h ../DrowsyDetectionSystem/common.h ../DrowsyDetectionSystem/mouthdetector.h ../DrowsyDetectionSystem/yawningdetector.h ../DrowsyDetectionSystem/videoplayer.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../DrowsyDetectionSystem/main.cpp ../DrowsyDetectionSystem/facedetector.cpp ../DrowsyDetectionSystem/mouthdetector.cpp ../DrowsyDetectionSystem/yawningdetector.cpp ../DrowsyDetectionSystem/videoplayer.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -677,8 +694,27 @@ compiler_clean: compiler_moc_predefs_clean
 
 ####### Compile
 
-main.o: ../DrowsyDetectionSystem/main.cpp 
+main.o: ../DrowsyDetectionSystem/main.cpp ../DrowsyDetectionSystem/facedetector.h \
+		../DrowsyDetectionSystem/common.h \
+		../DrowsyDetectionSystem/mouthdetector.h \
+		../DrowsyDetectionSystem/yawningdetector.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../DrowsyDetectionSystem/main.cpp
+
+facedetector.o: ../DrowsyDetectionSystem/facedetector.cpp ../DrowsyDetectionSystem/facedetector.h \
+		../DrowsyDetectionSystem/common.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o facedetector.o ../DrowsyDetectionSystem/facedetector.cpp
+
+mouthdetector.o: ../DrowsyDetectionSystem/mouthdetector.cpp ../DrowsyDetectionSystem/mouthdetector.h \
+		../DrowsyDetectionSystem/common.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mouthdetector.o ../DrowsyDetectionSystem/mouthdetector.cpp
+
+yawningdetector.o: ../DrowsyDetectionSystem/yawningdetector.cpp ../DrowsyDetectionSystem/yawningdetector.h \
+		../DrowsyDetectionSystem/common.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o yawningdetector.o ../DrowsyDetectionSystem/yawningdetector.cpp
+
+videoplayer.o: ../DrowsyDetectionSystem/videoplayer.cpp ../DrowsyDetectionSystem/videoplayer.h \
+		../DrowsyDetectionSystem/common.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o videoplayer.o ../DrowsyDetectionSystem/videoplayer.cpp
 
 ####### Install
 

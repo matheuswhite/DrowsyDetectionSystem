@@ -32,4 +32,15 @@ LIBS += -L/usr/local/lib \
 # --- ENDOF --- OpenCV paths for headers and libs
 
 SOURCES += \
-        main.cpp
+        main.cpp \
+    facedetector.cpp \
+    mouthdetector.cpp \
+    yawningdetector.cpp \
+    videoplayer.cpp
+
+HEADERS += \
+    facedetector.h \
+    common.h \
+    mouthdetector.h \
+    yawningdetector.h \
+    videoplayer.h
