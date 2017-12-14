@@ -1,0 +1,9 @@
+cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local -D BUILD_DOCS=ON -D BUILD_EXAMPLES=ON -D PYTHON2_EXECUTABLE=/usr/bin/python -D PYTHON_INCLUDE_DIR=/usr/include/python2.7/ -D PYTHON_INCLUDE_DIR2=/usr/include/x86_64-linux-gnu/python2.7/ -D PYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython2.7.so -D PYTHON2_NUMPY_INCLUDE_DIRS=/usr/lib/python2.7/dist-packages/numpy/core/include/ -D WITH_QT=ON -D WITH_OPENGL=ON -D FORCE_VTK=ON -D WITH_TBB=ON -D WITH_GDAL=ON -D WITH_XINE=ON -D ENABLE_PRECOMPILED_HEADERS=OFF -D WITH_FFMPEG=ON -D WITH_IPP=OFF ..
+
+^p^q
+sudo docker ps
+sudo docker commit <id> matheuswhite/pdi:1.0
+
+xhost local:root
+
+sudo docker run -it -v /tmp/.X11-unix:/tmp/.X11-unix -v /dev/video0:/dev/video0 -v ~/Documentos/dev/UFAL/PDI/DrowsyDetectionSystem/src/python/:~/pdi/drowsy/ -e DISPLAY=unix$DISPLAY --privileged matheuswhite/pdi:1.5
